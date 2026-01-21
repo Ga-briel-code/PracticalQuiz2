@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive 3D visualization of planetary orbits and celestial bodies">
+  <title>Celestial Orbital Viewer</title>
+  <script src="script/aframe.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; }
+    .ui-hint { 
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.5);
+      padding: 12px 24px; border-radius: 20px; font-size: 14px;
+      backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+    .ui-hint kbd {
+      background: rgba(255,255,255,0.15);
+      padding: 2px 8px; border-radius: 4px; margin: 0 4px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<a-scene cursor="rayOrigin: mouse" raycaster="objects: .selectable"
+         fog="type: exponential; color: #000; density: 0.015">
+
+  <!-- Enhanced lights -->
+  <a-light type="ambient" color="#99ccff" intensity="0.9"></a-light>
+  <a-light type="directional" position="-5 10 5" color="#ffffff" intensity="0.6" castShadow="true"></a-light>
+  <a-light type="directional" position="5 10 -5" color="#aaffff" intensity="0.4"></a-light>
+  <a-light type="point" position="0 20 0" color="#99ccff" intensity="0.5" distance="200" decay="2"></a-light>
+  <a-light type="hemisphere" skyColor="#00aaff" groundColor="#555" intensity="0.6"></a-light>
+
+  <!-- Assets -->
+  <a-assets>
+    <img id="stellar-bg" src="texture/2k_stars_milky_way.jpg">
+    <img id="sol-surface" src="texture/2k_sun.jpg">
+    <img id="merc-surface" src="texture/2k_mercury.jpg">
+    <img id="venus-surface" src="texture/2k_venus_surface.jpg">
+    <img id="terra-day" src="texture/2k_earth_daymap.jpg">
+    <img id="terra-night" src="texture/2k_earth_nightmap.jpg">
+    <img id="luna-surface" src="texture/2k_moon.jpg">
+    <img id="mars-surface" src="texture/2k_mars.jpg">
+    <img id="jove-surface" src="texture/2k_jupiter.jpg">
+    <img id="saturnus-surface" src="texture/2k_saturn.jpg">
+    <img id="saturnus-ring" src="texture/2k_saturn_ring_alpha.png">
+    <img id="uranus-surface" src="texture/2k_uranus.jpg">
+    <img id="neptune-surface" src="texture/2k_neptune.jpg">
+  </a-assets>
+
+  <!-- Camera -->
+  <a-entity id="viewpoint" position="0 18 55" camera="fov: 70"
+            look-controls="reverseMouseDrag: true" wasd-controls="acceleration: 10">
+    <a-animation attribute="rotation" to="0 360 0" dur="240000" repeat="indefinite" easing="linear"></a-animation>
+    <a-cursor color="#4FC3F7" fuse="true" fuse-timeout="600"></a-cursor>
+  </a-entity>
+
+  <!-- Background -->
+  <a-sphere src="#stellar-bg" radius="98" side="back"
+            animation="property: rotation; to: 0 360 0; dur: 900000; loop: true; easing: linear">
+  </a-sphere>
+
+  <!-- Sun -->
+  <a-entity id="central-star">
+    <a-sphere id="sol" src="#sol-surface" radius="6" class="selectable hover-glow"
+      material="emissive: #ffc259; emissiveIntensity: 0.8"
+      animation="property: rotation; to: 0 360 0; dur: 21000; loop: true">
+    </a-sphere>
+
+    <!-- Sun glow -->
+    <a-sphere radius="6.6"
+      material="color: #ffcc66; transparent: true; opacity: 0.15"
+      animation="property: scale; to: 1.05 1.05 1.05; dir: alternate; dur: 2000; loop: true">
+    </a-sphere>
+
+    <a-text value="Sol" position="0 8 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+
+    <!-- Solar system container for orbiting planets -->
+    <a-entity id="solar-system" animation="property: rotation; to: 0 360 0; dur: 120000; loop: true; easing: linear">
+
+      <!-- Mercury -->
+      <a-entity rotation="0 0 7">
+        <a-torus radius="6" radius-tubular="0.008" rotation="90 0 0" color="#888"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 8800; loop: true">
+          <a-sphere src="#merc-surface" radius="0.38" position="6 0 0" class="selectable hover-glow"></a-sphere>
+          <a-text value="Mercury" position="6 1 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Venus -->
+      <a-entity rotation="0 0 3.4">
+        <a-torus radius="9" radius-tubular="0.008" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 22500; loop: true">
+          <a-sphere src="#venus-surface" radius="0.95" position="9 0 0" class="selectable hover-glow"></a-sphere>
+          <a-text value="Venus" position="9 2 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity> 
+
+      <!-- Earth with Moon -->
+      <a-entity>
+        <a-torus radius="12" radius-tubular="0.008" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 36500; loop: true">
+          <a-entity position="12 0 0">
+            <a-sphere src="#terra-day" radius="1" class="selectable hover-glow"></a-sphere>
+            <a-sphere radius="1.05" material="color:#03A9F4; transparent:true; opacity:0.25; side:back"></a-sphere>
+            <a-text value="Earth" position="0 2 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+
+            <!-- Moon orbiting Earth -->
+            <a-entity animation="property: rotation; to: 0 360 0; dur: 5000; loop: true">
+              <a-sphere src="#luna-surface" radius="0.27" position="0 2 0" class="selectable hover-glow"></a-sphere>
+              <a-text value="Moon" position="0 2 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+
+            </a-entity>
+          </a-entity>
+        </a-entity> 
+      </a-entity> 
+
+      <!-- Mars -->
+      <a-entity rotation="0 0 1.8">
+        <a-torus radius="15" radius-tubular="0.008" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 68700; loop: true">
+          <a-sphere src="#mars-surface" radius="0.53" position="15 0 0" class="selectable hover-glow"></a-sphere>
+          <a-text value="Mars" position="15 1.4 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Jupiter (no ring) -->
+      <a-entity rotation="0 0 1.3">
+        <a-torus radius="20" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 433000; loop: true">
+          <a-sphere src="#jove-surface" radius="2.2" position="20 0 0" class="selectable hover-glow"></a-sphere>
+          <a-text value="Jupiter" position="20 3 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Saturn with thick + one subtle ring -->
+      <a-entity rotation="0 0 2.5">
+        <a-torus radius="26" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 1076000; loop: true">
+          <a-entity position="26 0 0">
+            <a-sphere src="#saturnus-surface" radius="1.9" class="selectable hover-glow"></a-sphere>
+            <!-- Subtle outer ring -->
+            <a-ring radius-inner="3.8" radius-outer="3.6" rotation="90 0 0" material="color:#ccc; transparent:true; opacity:0.35; side:double"></a-ring>
+            <a-text value="Saturn" position="0 3 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+          </a-entity>
+        </a-entity>
+      </a-entity>
+
+      <!-- Uranus -->
+      <a-entity rotation="0 0 0.8">
+        <a-torus radius="32" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 3068000; loop: true">
+          <a-sphere src="#uranus-surface" radius="1.3" position="32 0 0" rotation="0 0 98" class="selectable hover-glow"></a-sphere>
+          <a-text value="Uranus" position="32 2.5 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity>
+
+      <!-- Neptune -->
+      <a-entity rotation="0 0 1.8">
+        <a-torus radius="38" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+        <a-entity animation="property: rotation; to: 0 360 0; dur: 6019000; loop: true">
+          <a-sphere src="#neptune-surface" radius="1.25" position="38 0 0" class="selectable hover-glow"></a-sphere>
+          <a-text value="Neptune" position="38 2.5 0" align="center" color="#FFF" scale="3 3 3"></a-text>
+        </a-entity>
+      </a-entity>
+
+    </a-entity>
+  </a-entity>
+</a-scene>
+
+<div class="ui-hint">
+  Click planets • <kbd>T</kbd> Labels • <kbd>B</kbd> Teleport
+</div>
+
+<script>
+AFRAME.registerComponent('hover-glow', {
+  init() {
+    this.el.addEventListener('mouseenter', () =>
+      this.el.setAttribute('material', 'emissiveIntensity', 0.6));
+    this.el.addEventListener('mouseleave', () =>
+      this.el.setAttribute('material', 'emissiveIntensity', 0.1));
+  }
+});
+
+// Twinkling stars
+AFRAME.registerComponent('twinkling-stars', {
+  init: function () {
+    const sceneEl = this.el;
+    const starCount = 500;
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('a-sphere');
+      const distance = 90 + Math.random() * 10;
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.random() * Math.PI;
+
+      star.setAttribute('radius', 0.05 + Math.random() * 0.05);
+      star.setAttribute('material', 'color: #fff; emissive: #fff; emissiveIntensity: 0.7');
+      star.setAttribute('position', {
+        x: distance * Math.sin(phi) * Math.cos(theta),
+        y: distance * Math.sin(phi) * Math.sin(theta),
+        z: distance * Math.cos(phi)
+      });
+
+      star.setAttribute('animation', `property: material.emissiveIntensity; 
+                                      from: 0.3; to: 1.0; dur: ${500 + Math.random() * 1500}; 
+                                      dir: alternate; loop: true; easing: easeInOutSine`);
+      sceneEl.appendChild(star);
+    }
+  }
+});
+
+document.querySelector('a-scene').setAttribute('twinkling-stars', '');
+</script>
+
+</body>
+</html>
